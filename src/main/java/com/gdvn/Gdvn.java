@@ -6,6 +6,7 @@ import com.gdvn.command.GdvnCommand;
 import com.gdvn.db.DatabaseManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -71,6 +72,8 @@ public class Gdvn implements ModInitializer {
 				}
 			});
 		});
+
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> EXECUTOR.shutdownNow());
 
 		LOGGER.info("GDVN mod initialized");
 	}

@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DisplayNameManager {
     private static final Map<UUID, Component> DISPLAY_NAMES = new ConcurrentHashMap<>();
+    private static final int DEFAULT_COLOR = 0xFFFFFF;
 
     public static Component getDisplayName(UUID uuid) {
         return DISPLAY_NAMES.get(uuid);
@@ -66,7 +67,7 @@ public class DisplayNameManager {
 
     private static int parseHexColor(String hex) {
         if (hex == null || hex.isEmpty()) {
-            return 0xFFFFFF;
+            return DEFAULT_COLOR;
         }
         if (hex.startsWith("#")) {
             hex = hex.substring(1);
@@ -74,7 +75,7 @@ public class DisplayNameManager {
         try {
             return Integer.parseInt(hex, 16);
         } catch (NumberFormatException e) {
-            return 0xFFFFFF;
+            return DEFAULT_COLOR;
         }
     }
 }
