@@ -56,7 +56,7 @@ public class Gdvn implements ModInitializer {
 					PlayerData data = GdvnApi.getPlayerInfo(token);
 					DisplayNameManager.updateDisplayName(player.getUUID(), data);
 
-					server.execute(() -> player.refreshDisplayName());
+					server.execute(() -> DisplayNameManager.broadcastDisplayNameUpdate(player, server));
 				} catch (Exception e) {
 					LOGGER.warn("Failed to validate token for {}: {}", player.getName().getString(), e.getMessage());
 					try {
@@ -67,7 +67,7 @@ public class Gdvn implements ModInitializer {
 					server.execute(() -> {
 						player.sendSystemMessage(Component.literal(
 								"GDVN token expired. Please relink your account."));
-						player.refreshDisplayName();
+						DisplayNameManager.broadcastDisplayNameUpdate(player, server);
 					});
 				}
 			});

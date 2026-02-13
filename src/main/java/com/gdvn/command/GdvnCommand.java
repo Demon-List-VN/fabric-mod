@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.net.URI;
@@ -56,13 +57,14 @@ public class GdvnCommand {
 
         source.sendSystemMessage(Component.literal("Creating OTP code..."));
 
+        MinecraftServer server = source.getServer();
         Gdvn.runAsync(() -> {
             try {
                 JsonObject response = GdvnApi.createOtp();
                 String code = response.get("code").getAsString();
                 PENDING_OTP.put(player.getUUID(), code);
 
-                player.getServer().execute(() -> {
+                server.execute(() -> {
                     MutableComponent message = Component.empty();
 
                     message.append(Component.literal("Click here to login!")
@@ -86,7 +88,7 @@ public class GdvnCommand {
                     source.sendSystemMessage(message);
                 });
             } catch (Exception e) {
-                player.getServer().execute(() ->
+                server.execute(() ->
                         source.sendFailure(Component.literal("Failed to create OTP: " + e.getMessage()))
                 );
             }
@@ -110,13 +112,14 @@ public class GdvnCommand {
 
         source.sendSystemMessage(Component.literal("Verifying OTP code..."));
 
+        MinecraftServer server = source.getServer();
         Gdvn.runAsync(() -> {
             try {
                 JsonObject response = GdvnApi.verifyOtp(code);
                 boolean granted = response.get("granted").getAsBoolean();
 
                 if (!granted) {
-                    player.getServer().execute(() ->
+                    server.execute(() ->
                             source.sendFailure(Component.literal(
                                     "OTP not yet granted. Please login via the link first."))
                     );
@@ -132,14 +135,14 @@ public class GdvnCommand {
                 PlayerData data = GdvnApi.getPlayerInfo(key);
                 DisplayNameManager.updateDisplayName(player.getUUID(), data);
 
-                player.getServer().execute(() -> {
+                server.execute(() -> {
                     source.sendSystemMessage(Component.literal("Successfully linked to account: ")
                             .append(Component.literal(playerName)
                                     .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x55FF55)))));
-                    player.refreshDisplayName();
+                    DisplayNameManager.broadcastDisplayNameUpdate(player, server);
                 });
             } catch (Exception e) {
-                player.getServer().execute(() ->
+                server.execute(() ->
                         source.sendFailure(Component.literal("Failed to verify OTP: " + e.getMessage()))
                 );
             }
@@ -157,11 +160,12 @@ public class GdvnCommand {
 
         String uuid = player.getStringUUID();
 
+        MinecraftServer server = source.getServer();
         Gdvn.runAsync(() -> {
             try {
                 String token = Gdvn.getDatabase().getToken(uuid);
                 if (token == null) {
-                    player.getServer().execute(() ->
+                    server.execute(() ->
                             source.sendFailure(Component.literal("You are not linked to any account."))
                     );
                     return;
@@ -175,12 +179,12 @@ public class GdvnCommand {
                 Gdvn.getDatabase().removeToken(uuid);
                 DisplayNameManager.removeDisplayName(player.getUUID());
 
-                player.getServer().execute(() -> {
+                server.execute(() -> {
                     source.sendSystemMessage(Component.literal("Successfully unlinked your account."));
-                    player.refreshDisplayName();
+                    DisplayNameManager.broadcastDisplayNameUpdate(player, server);
                 });
             } catch (Exception e) {
-                player.getServer().execute(() ->
+                server.execute(() ->
                         source.sendFailure(Component.literal("Failed to unlink: " + e.getMessage()))
                 );
             }
@@ -198,11 +202,12 @@ public class GdvnCommand {
 
         String uuid = player.getStringUUID();
 
+        MinecraftServer server = source.getServer();
         Gdvn.runAsync(() -> {
             try {
                 String token = Gdvn.getDatabase().getToken(uuid);
                 if (token == null) {
-                    player.getServer().execute(() ->
+                    server.execute(() ->
                             source.sendFailure(Component.literal("You are not linked to any account."))
                     );
                     return;
@@ -210,7 +215,7 @@ public class GdvnCommand {
 
                 PlayerData data = GdvnApi.getPlayerInfo(token);
 
-                player.getServer().execute(() -> {
+                server.execute(() -> {
                     source.sendSystemMessage(Component.literal("=== GDVN Account Info ===")
                             .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x55FFFF))));
                     source.sendSystemMessage(Component.literal("Name: ")
@@ -233,11 +238,11 @@ public class GdvnCommand {
                             .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x55FFFF))));
                 });
             } catch (Exception e) {
-                player.getServer().execute(() -> {
+                server.execute(() -> {
                     try {
                         Gdvn.getDatabase().removeToken(uuid);
                         DisplayNameManager.removeDisplayName(player.getUUID());
-                        player.refreshDisplayName();
+                        DisplayNameManager.broadcastDisplayNameUpdate(player, server);
                     } catch (Exception ignored) {
                     }
                     source.sendFailure(Component.literal(

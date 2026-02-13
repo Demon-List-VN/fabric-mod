@@ -5,9 +5,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +27,15 @@ public class DisplayNameManager {
 
     public static void removeDisplayName(UUID uuid) {
         DISPLAY_NAMES.remove(uuid);
+    }
+
+    public static void broadcastDisplayNameUpdate(ServerPlayer player, MinecraftServer server) {
+        server.getPlayerList().broadcastAll(
+                new ClientboundPlayerInfoUpdatePacket(
+                        EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME),
+                        List.of(player)
+                )
+        );
     }
 
     public static void updateDisplayName(UUID uuid, PlayerData data) {
