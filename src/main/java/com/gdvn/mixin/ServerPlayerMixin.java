@@ -19,13 +19,4 @@ public abstract class ServerPlayerMixin {
             cir.setReturnValue(customName);
         }
     }
-
-    @Inject(method = "getDisplayName", at = @At("HEAD"), cancellable = true)
-    private void gdvn$getDisplayName(CallbackInfoReturnable<Component> cir) {
-        ServerPlayer self = (ServerPlayer) (Object) this;
-        Component customName = DisplayNameManager.getDisplayName(self.getUUID());
-        if (customName != null) {
-            cir.setReturnValue(customName);
-        }
-    }
 }

@@ -41,10 +41,7 @@ public class DisplayNameManager {
     public static void updateDisplayName(UUID uuid, PlayerData data) {
         MutableComponent component = Component.empty();
 
-        if (data.supporterUntil != null && !isExpired(data.supporterUntil)) {
-            component.append(Component.literal("SPT ")
-                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFAA00))));
-        }
+
 
         if (data.clans != null && data.clan != null) {
             boolean isBoosted = data.clans.boostedUntil != null && !isExpired(data.clans.boostedUntil);
@@ -65,7 +62,13 @@ public class DisplayNameManager {
             }
         }
 
-        component.append(Component.literal(data.name));
+        if (data.supporterUntil != null && !isExpired(data.supporterUntil)) {
+            component.append(Component.literal(data.name))
+                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFAA00)));
+        } else {
+            component.append(Component.literal(data.name));
+        }
+
 
         DISPLAY_NAMES.put(uuid, component);
     }
