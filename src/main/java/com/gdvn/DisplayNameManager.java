@@ -67,16 +67,15 @@ public class DisplayNameManager {
                 int bracketColor = parseHexColor(data.clans.tagBgColor);
                 int tagColor = parseHexColor(data.clans.tagTextColor);
 
-                MutableComponent clanPrefix = Component.empty();
-                clanPrefix.append(Component.literal("[")
-                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(bracketColor))));
-                clanPrefix.append(Component.literal(data.clans.tag)
-                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(tagColor))));
-                clanPrefix.append(Component.literal("] ")
-                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(bracketColor))));
+                Component bracketOpen = Component.literal("[")
+                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(bracketColor)));
+                Component tagText = Component.literal(data.clans.tag)
+                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(tagColor)));
+                Component bracketClose = Component.literal("] ")
+                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(bracketColor)));
 
-                nameTag.append(clanPrefix.copy());
-                tabName.append(clanPrefix.copy());
+                nameTag.append(bracketOpen.copy()).append(tagText.copy()).append(bracketClose.copy());
+                tabName.append(bracketOpen.copy()).append(tagText.copy()).append(bracketClose.copy());
             } else {
                 Component clanPrefix = Component.literal("[" + data.clans.tag + "] ")
                         .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xAAAAAA)));
