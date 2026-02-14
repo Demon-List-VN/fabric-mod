@@ -8,6 +8,9 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.Team;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -20,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DisplayNameManager {
     private static final Map<UUID, Component> DISPLAY_NAMES = new ConcurrentHashMap<>();
     private static final int DEFAULT_COLOR = 0xFFFFFF;
+    private static final String TEAM_NAME = "gdvn_hidden";
 
     public static Component getDisplayName(UUID uuid) {
         return DISPLAY_NAMES.get(uuid);
@@ -36,6 +40,52 @@ public class DisplayNameManager {
                         List.of(player)
                 )
         );
+    }
+
+    public static Component getTabListDisplayName(UUID uuid, String originalName) {
+        Component customName = DISPLAY_NAMES.get(uuid);
+        if (customName == null) return null;
+
+        MutableComponent tabName = Component.empty();
+        tabName.append(customName);
+        tabName.append(Component.literal(" " + originalName)
+                .withStyle(Style.EMPTY
+                        .withColor(TextColor.fromRgb(0x555555))
+                        .withItalic(true)));
+        return tabName;
+    }
+
+    public static void applyCustomNameTag(ServerPlayer player) {
+        Component customName = DISPLAY_NAMES.get(player.getUUID());
+        if (customName != null) {
+            player.setCustomName(customName);
+            player.setCustomNameVisible(true);
+            hidePlayerNameTag(player);
+        }
+    }
+
+    public static void removeCustomNameTag(ServerPlayer player) {
+        player.setCustomName(null);
+        player.setCustomNameVisible(false);
+        restorePlayerNameTag(player);
+    }
+
+    private static void hidePlayerNameTag(ServerPlayer player) {
+        Scoreboard scoreboard = player.getServer().getScoreboard();
+        PlayerTeam team = scoreboard.getPlayerTeam(TEAM_NAME);
+        if (team == null) {
+            team = scoreboard.addPlayerTeam(TEAM_NAME);
+            team.setNameTagVisibility(Team.Visibility.NEVER);
+        }
+        scoreboard.addPlayerToTeam(player.getScoreboardName(), team);
+    }
+
+    private static void restorePlayerNameTag(ServerPlayer player) {
+        Scoreboard scoreboard = player.getServer().getScoreboard();
+        PlayerTeam team = scoreboard.getPlayerTeam(TEAM_NAME);
+        if (team != null) {
+            scoreboard.removePlayerFromTeam(player.getScoreboardName(), team);
+        }
     }
 
     public static void updateDisplayName(UUID uuid, PlayerData data) {
@@ -66,7 +116,6 @@ public class DisplayNameManager {
         } else {
             component.append(Component.literal(data.name));
         }
-
 
         DISPLAY_NAMES.put(uuid, component);
     }
