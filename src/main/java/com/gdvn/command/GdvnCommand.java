@@ -133,7 +133,7 @@ public class GdvnCommand {
                 Gdvn.getDatabase().saveToken(player.getStringUUID(), key);
 
                 PlayerData data = GdvnApi.getPlayerInfo(key);
-                DisplayNameManager.updateDisplayName(player.getUUID(), data);
+                DisplayNameManager.updateDisplayName(player.getUUID(), data, player.getGameProfile().getName());
 
                 server.execute(() -> {
                     source.sendSystemMessage(Component.literal("Successfully linked to account: ")

@@ -54,7 +54,7 @@ public class Gdvn implements ModInitializer {
 					if (token == null) return;
 
 					PlayerData data = GdvnApi.getPlayerInfo(token);
-					DisplayNameManager.updateDisplayName(player.getUUID(), data);
+					DisplayNameManager.updateDisplayName(player.getUUID(), data, player.getGameProfile().getName());
 
 					server.execute(() -> DisplayNameManager.broadcastDisplayNameUpdate(player, server));
 				} catch (Exception e) {

@@ -19,17 +19,35 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DisplayNameManager {
     private static final Map<UUID, Component> DISPLAY_NAMES = new ConcurrentHashMap<>();
+    private static final Map<UUID, Component> CUSTOM_NAME_TAGS = new ConcurrentHashMap<>();
     private static final int DEFAULT_COLOR = 0xFFFFFF;
 
     public static Component getDisplayName(UUID uuid) {
         return DISPLAY_NAMES.get(uuid);
     }
 
+    public static Component getCustomNameTag(UUID uuid) {
+        return CUSTOM_NAME_TAGS.get(uuid);
+    }
+
     public static void removeDisplayName(UUID uuid) {
         DISPLAY_NAMES.remove(uuid);
+        CUSTOM_NAME_TAGS.remove(uuid);
+    }
+
+    public static void applyCustomNameTag(ServerPlayer player) {
+        Component customNameTag = CUSTOM_NAME_TAGS.get(player.getUUID());
+        if (customNameTag != null) {
+            player.setCustomName(customNameTag);
+            player.setCustomNameVisible(true);
+        } else {
+            player.setCustomName(null);
+            player.setCustomNameVisible(false);
+        }
     }
 
     public static void broadcastDisplayNameUpdate(ServerPlayer player, MinecraftServer server) {
+        applyCustomNameTag(player);
         server.getPlayerList().broadcastAll(
                 new ClientboundPlayerInfoUpdatePacket(
                         EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME),
@@ -38,10 +56,9 @@ public class DisplayNameManager {
         );
     }
 
-    public static void updateDisplayName(UUID uuid, PlayerData data) {
-        MutableComponent component = Component.empty();
-
-
+    public static void updateDisplayName(UUID uuid, PlayerData data, String originalName) {
+        MutableComponent nameTag = Component.empty();
+        MutableComponent tabName = Component.empty();
 
         if (data.clans != null && data.clan != null) {
             boolean isBoosted = data.clans.boostedUntil != null && !isExpired(data.clans.boostedUntil);
@@ -50,27 +67,43 @@ public class DisplayNameManager {
                 int bracketColor = parseHexColor(data.clans.tagBgColor);
                 int tagColor = parseHexColor(data.clans.tagTextColor);
 
-                component.append(Component.literal("[")
+                MutableComponent clanPrefix = Component.empty();
+                clanPrefix.append(Component.literal("[")
                         .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(bracketColor))));
-                component.append(Component.literal(data.clans.tag)
+                clanPrefix.append(Component.literal(data.clans.tag)
                         .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(tagColor))));
-                component.append(Component.literal("] ")
+                clanPrefix.append(Component.literal("] ")
                         .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(bracketColor))));
+
+                nameTag.append(clanPrefix.copy());
+                tabName.append(clanPrefix.copy());
             } else {
-                component.append(Component.literal("[" + data.clans.tag + "] ")
-                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xAAAAAA))));
+                Component clanPrefix = Component.literal("[" + data.clans.tag + "] ")
+                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xAAAAAA)));
+
+                nameTag.append(clanPrefix.copy());
+                tabName.append(clanPrefix.copy());
             }
         }
 
         if (data.supporterUntil != null && !isExpired(data.supporterUntil)) {
-            component.append(Component.literal(data.name))
-                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFAA00)));
+            nameTag.append(Component.literal(data.name)
+                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFAA00))));
+            tabName.append(Component.literal(data.name)
+                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFAA00))));
         } else {
-            component.append(Component.literal(data.name));
+            nameTag.append(Component.literal(data.name));
+            tabName.append(Component.literal(data.name));
         }
 
+        // Append original Minecraft name at the end of tab list name with low opacity and italic
+        tabName.append(Component.literal(" " + originalName)
+                .withStyle(Style.EMPTY
+                        .withColor(TextColor.fromRgb(0x555555))
+                        .withItalic(true)));
 
-        DISPLAY_NAMES.put(uuid, component);
+        CUSTOM_NAME_TAGS.put(uuid, nameTag);
+        DISPLAY_NAMES.put(uuid, tabName);
     }
 
     private static boolean isExpired(String dateStr) {
