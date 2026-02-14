@@ -52,33 +52,6 @@ public class DisplayNameManager {
         return tabName;
     }
 
-    public static void applyCustomNameTag(ServerPlayer player, MinecraftServer server) {
-        Component customName = DISPLAY_NAMES.get(player.getUUID());
-        if (customName == null) return;
-
-        removeCustomNameTag(player, server);
-
-        NameTagEntity nameTag = new NameTagEntity(player, customName);
-        NAME_TAGS.put(player.getUUID(), nameTag);
-
-        for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
-            if (!viewer.getUUID().equals(player.getUUID())) {
-                nameTag.spawn(viewer);
-            }
-        }
-    }
-
-    public static void removeCustomNameTag(ServerPlayer player, MinecraftServer server) {
-        NameTagEntity nameTag = NAME_TAGS.remove(player.getUUID());
-        if (nameTag != null) {
-            for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
-                if (!viewer.getUUID().equals(player.getUUID())) {
-                    nameTag.despawn(viewer);
-                }
-            }
-        }
-    }
-
     public static void onPlayerJoin(ServerPlayer player, MinecraftServer server) {
         for (Map.Entry<UUID, NameTagEntity> entry : NAME_TAGS.entrySet()) {
             if (!entry.getKey().equals(player.getUUID())) {
