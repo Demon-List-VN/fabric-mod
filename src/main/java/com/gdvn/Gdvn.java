@@ -7,7 +7,6 @@ import com.gdvn.db.DatabaseManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -85,8 +84,6 @@ public class Gdvn implements ModInitializer {
 			ServerPlayer player = handler.player;
 			DisplayNameManager.onPlayerDisconnect(player, server);
 		});
-
-		ServerTickEvents.END_SERVER_TICK.register(DisplayNameManager::tick);
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> EXECUTOR.shutdownNow());
 

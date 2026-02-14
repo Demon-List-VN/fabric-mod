@@ -12,7 +12,6 @@ import net.minecraft.server.level.ServerPlayer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -94,28 +93,6 @@ public class DisplayNameManager {
             for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
                 if (!viewer.getUUID().equals(player.getUUID())) {
                     nameTag.despawn(viewer);
-                }
-            }
-        }
-    }
-
-    public static void tick(MinecraftServer server) {
-        Iterator<Map.Entry<UUID, NameTagEntity>> iterator = NAME_TAGS.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, NameTagEntity> entry = iterator.next();
-            NameTagEntity nameTag = entry.getValue();
-            ServerPlayer owner = nameTag.getOwner();
-
-            if (owner.isRemoved()) {
-                iterator.remove();
-                continue;
-            }
-
-            if (!nameTag.hasPositionChanged()) continue;
-
-            for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
-                if (!viewer.getUUID().equals(owner.getUUID())) {
-                    nameTag.updatePosition(viewer);
                 }
             }
         }
