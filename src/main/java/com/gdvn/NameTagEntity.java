@@ -18,6 +18,7 @@ import org.joml.Vector3f;
 import java.util.List;
 
 public class NameTagEntity {
+    private static final float NAMETAG_VERTICAL_OFFSET = 0.5F;
     private final Display.TextDisplay textDisplay;
     private final ServerPlayer owner;
 
@@ -28,9 +29,9 @@ public class NameTagEntity {
         this.textDisplay.setPos(owner.getX(), owner.getY(), owner.getZ());
         this.textDisplay.setText(displayName);
         this.textDisplay.setTransformation(new Transformation(
-                new Vector3f(0.0F, owner.getBbHeight() + 0.5F, 0.0F),
+                new Vector3f(0.0F, owner.getBbHeight() + NAMETAG_VERTICAL_OFFSET, 0.0F),
                 new Quaternionf(),
-                new Vector3f(1.0F),
+                new Vector3f(1.0F, 1.0F, 1.0F),
                 new Quaternionf()
         ));
         this.textDisplay.setBillboardConstraints(Display.BillboardConstraints.CENTER);
