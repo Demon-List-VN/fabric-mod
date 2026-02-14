@@ -8,9 +8,6 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.scores.PlayerTeam;
-import net.minecraft.world.scores.Scoreboard;
-import net.minecraft.world.scores.Team;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -22,9 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DisplayNameManager {
     private static final Map<UUID, Component> DISPLAY_NAMES = new ConcurrentHashMap<>();
-    private static final Map<UUID, String> ORIGINAL_TEAMS = new ConcurrentHashMap<>();
     private static final int DEFAULT_COLOR = 0xFFFFFF;
-    private static final String TEAM_NAME = "gdvn_hidden";
 
     public static Component getDisplayName(UUID uuid) {
         return DISPLAY_NAMES.get(uuid);
@@ -32,7 +27,6 @@ public class DisplayNameManager {
 
     public static void removeDisplayName(UUID uuid) {
         DISPLAY_NAMES.remove(uuid);
-        ORIGINAL_TEAMS.remove(uuid);
     }
 
     public static void broadcastDisplayNameUpdate(ServerPlayer player, MinecraftServer server) {
@@ -57,48 +51,17 @@ public class DisplayNameManager {
         return tabName;
     }
 
-    public static void applyCustomNameTag(ServerPlayer player, MinecraftServer server) {
+    public static void applyCustomNameTag(ServerPlayer player) {
         Component customName = DISPLAY_NAMES.get(player.getUUID());
         if (customName != null) {
             player.setCustomName(customName);
             player.setCustomNameVisible(true);
-            hidePlayerNameTag(player, server);
         }
     }
 
-    public static void removeCustomNameTag(ServerPlayer player, MinecraftServer server) {
+    public static void removeCustomNameTag(ServerPlayer player) {
         player.setCustomName(null);
         player.setCustomNameVisible(false);
-        restorePlayerNameTag(player, server);
-    }
-
-    private static void hidePlayerNameTag(ServerPlayer player, MinecraftServer server) {
-        Scoreboard scoreboard = server.getScoreboard();
-        PlayerTeam currentTeam = scoreboard.getPlayersTeam(player.getScoreboardName());
-        if (currentTeam != null && !currentTeam.getName().equals(TEAM_NAME)) {
-            ORIGINAL_TEAMS.put(player.getUUID(), currentTeam.getName());
-        }
-        PlayerTeam team = scoreboard.getPlayerTeam(TEAM_NAME);
-        if (team == null) {
-            team = scoreboard.addPlayerTeam(TEAM_NAME);
-            team.setNameTagVisibility(Team.Visibility.NEVER);
-        }
-        scoreboard.addPlayerToTeam(player.getScoreboardName(), team);
-    }
-
-    private static void restorePlayerNameTag(ServerPlayer player, MinecraftServer server) {
-        Scoreboard scoreboard = server.getScoreboard();
-        PlayerTeam team = scoreboard.getPlayerTeam(TEAM_NAME);
-        if (team != null) {
-            scoreboard.removePlayerFromTeam(player.getScoreboardName(), team);
-        }
-        String originalTeamName = ORIGINAL_TEAMS.remove(player.getUUID());
-        if (originalTeamName != null) {
-            PlayerTeam originalTeam = scoreboard.getPlayerTeam(originalTeamName);
-            if (originalTeam != null) {
-                scoreboard.addPlayerToTeam(player.getScoreboardName(), originalTeam);
-            }
-        }
     }
 
     public static void updateDisplayName(UUID uuid, PlayerData data) {

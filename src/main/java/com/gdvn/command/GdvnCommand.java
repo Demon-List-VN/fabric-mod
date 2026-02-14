@@ -139,7 +139,7 @@ public class GdvnCommand {
                     source.sendSystemMessage(Component.literal("Successfully linked to account: ")
                             .append(Component.literal(playerName)
                                     .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x55FF55)))));
-                    DisplayNameManager.applyCustomNameTag(player, server);
+                    DisplayNameManager.applyCustomNameTag(player);
                     DisplayNameManager.broadcastDisplayNameUpdate(player, server);
                 });
             } catch (Exception e) {
@@ -182,7 +182,7 @@ public class GdvnCommand {
 
                 server.execute(() -> {
                     source.sendSystemMessage(Component.literal("Successfully unlinked your account."));
-                    DisplayNameManager.removeCustomNameTag(player, server);
+                    DisplayNameManager.removeCustomNameTag(player);
                     DisplayNameManager.broadcastDisplayNameUpdate(player, server);
                 });
             } catch (Exception e) {
@@ -244,7 +244,7 @@ public class GdvnCommand {
                     try {
                         Gdvn.getDatabase().removeToken(uuid);
                         DisplayNameManager.removeDisplayName(player.getUUID());
-                        DisplayNameManager.removeCustomNameTag(player, server);
+                        DisplayNameManager.removeCustomNameTag(player);
                         DisplayNameManager.broadcastDisplayNameUpdate(player, server);
                     } catch (Exception ignored) {
                     }
