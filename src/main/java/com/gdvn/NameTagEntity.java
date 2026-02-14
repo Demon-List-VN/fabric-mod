@@ -27,6 +27,12 @@ public class NameTagEntity {
         this.textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, level);
         this.textDisplay.setPos(owner.getX(), owner.getY(), owner.getZ());
         this.textDisplay.setText(displayName);
+        this.textDisplay.setTransformation(new Transformation(
+                new Vector3f(0.0F, owner.getBbHeight() + 0.5F, 0.0F),
+                new Quaternionf(),
+                new Vector3f(1.0F),
+                new Quaternionf()
+        ));
         this.textDisplay.setBillboardConstraints(Display.BillboardConstraints.CENTER);
         this.textDisplay.setViewRange(1.0f);
         this.textDisplay.setBackgroundColor(0);
