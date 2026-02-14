@@ -48,6 +48,9 @@ public class Gdvn implements ModInitializer {
 			ServerPlayer player = handler.player;
 			String uuid = player.getStringUUID();
 
+			// Show existing name tags to the joining player
+			DisplayNameManager.onPlayerJoin(player, server);
+
 			runAsync(() -> {
 				try {
 					String token = database.getToken(uuid);
@@ -56,7 +59,10 @@ public class Gdvn implements ModInitializer {
 					PlayerData data = GdvnApi.getPlayerInfo(token);
 					DisplayNameManager.updateDisplayName(player.getUUID(), data);
 
-					server.execute(() -> DisplayNameManager.broadcastDisplayNameUpdate(player, server));
+					server.execute(() -> {
+						DisplayNameManager.applyCustomNameTag(player, server);
+						DisplayNameManager.broadcastDisplayNameUpdate(player, server);
+					});
 				} catch (Exception e) {
 					LOGGER.warn("Failed to validate token for {}: {}", player.getName().getString(), e.getMessage());
 					try {
@@ -67,10 +73,16 @@ public class Gdvn implements ModInitializer {
 					server.execute(() -> {
 						player.sendSystemMessage(Component.literal(
 								"GDVN token expired. Please relink your account."));
+						DisplayNameManager.removeCustomNameTag(player, server);
 						DisplayNameManager.broadcastDisplayNameUpdate(player, server);
 					});
 				}
 			});
+		});
+
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			ServerPlayer player = handler.player;
+			DisplayNameManager.onPlayerDisconnect(player, server);
 		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> EXECUTOR.shutdownNow());
