@@ -1,24 +1,20 @@
 package com.gdvn;
 
-import com.gdvn.mixin.SetPassengersPacketAccessor;
-import com.mojang.math.Transformation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
-import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityType;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.List;
 
 public class NameTagEntity {
     private static final float NAMETAG_VERTICAL_OFFSET = 0.5F;
+    private static final double POSITION_EPSILON = 1.0E-4;
     private final Display.TextDisplay textDisplay;
     private final ServerPlayer owner;
 
@@ -26,30 +22,23 @@ public class NameTagEntity {
         this.owner = owner;
         ServerLevel level = owner.level();
         this.textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, level);
-        this.textDisplay.setPos(owner.getX(), owner.getY(), owner.getZ());
+        updatePosition();
         this.textDisplay.setText(displayName);
-        this.textDisplay.setTransformation(new Transformation(
-                new Vector3f(0.0F, owner.getBbHeight() + NAMETAG_VERTICAL_OFFSET, 0.0F),
-                new Quaternionf(),
-                new Vector3f(1.0F, 1.0F, 1.0F),
-                new Quaternionf()
-        ));
         this.textDisplay.setBillboardConstraints(Display.BillboardConstraints.CENTER);
         this.textDisplay.setViewRange(1.0f);
         this.textDisplay.setBackgroundColor(0);
     }
 
     public void spawn(ServerPlayer viewer) {
+        updatePosition();
         viewer.connection.send(new ClientboundAddEntityPacket(
                 textDisplay, 0, textDisplay.blockPosition()
         ));
         sendMetadata(viewer);
-        sendPassengerPacket(viewer);
     }
 
     public void despawn(ServerPlayer viewer) {
         viewer.connection.send(new ClientboundRemoveEntitiesPacket(textDisplay.getId()));
-        resetPassengers(viewer);
     }
 
     private void sendMetadata(ServerPlayer viewer) {
@@ -59,27 +48,17 @@ public class NameTagEntity {
         }
     }
 
-    private void sendPassengerPacket(ServerPlayer viewer) {
-        // Create packet from the owner entity, then override passengers to include our text display
-        ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(owner);
-        int[] passengerIds = getPassengerIdsWithExtra(owner, textDisplay.getId());
-        ((SetPassengersPacketAccessor) packet).setPassengers(passengerIds);
-        viewer.connection.send(packet);
-    }
-
-    private void resetPassengers(ServerPlayer viewer) {
-        // Send the actual passengers list (without our virtual entity)
-        viewer.connection.send(new ClientboundSetPassengersPacket(owner));
-    }
-
-    private static int[] getPassengerIdsWithExtra(ServerPlayer owner, int extraPassengerId) {
-        var passengers = owner.getPassengers();
-        int[] ids = new int[passengers.size() + 1];
-        for (int i = 0; i < passengers.size(); i++) {
-            ids[i] = passengers.get(i).getId();
+    public boolean updatePosition() {
+        double x = owner.getX();
+        double y = owner.getY() + owner.getBbHeight() + NAMETAG_VERTICAL_OFFSET;
+        double z = owner.getZ();
+        if (Math.abs(textDisplay.getX() - x) < POSITION_EPSILON
+                && Math.abs(textDisplay.getY() - y) < POSITION_EPSILON
+                && Math.abs(textDisplay.getZ() - z) < POSITION_EPSILON) {
+            return false;
         }
-        ids[passengers.size()] = extraPassengerId;
-        return ids;
+        textDisplay.setPos(x, y, z);
+        return true;
     }
 
     public int getEntityId() {

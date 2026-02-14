@@ -98,6 +98,20 @@ public class DisplayNameManager {
         }
     }
 
+    public static void tickNameTags(MinecraftServer server) {
+        for (NameTagEntity nameTag : NAME_TAGS.values()) {
+            if (!nameTag.updatePosition()) {
+                continue;
+            }
+            for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
+                if (!viewer.getUUID().equals(nameTag.getOwner().getUUID())) {
+                    nameTag.despawn(viewer);
+                    nameTag.spawn(viewer);
+                }
+            }
+        }
+    }
+
     public static void updateDisplayName(UUID uuid, PlayerData data) {
         MutableComponent component = Component.empty();
 
