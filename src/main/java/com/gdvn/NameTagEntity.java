@@ -1,6 +1,7 @@
 package com.gdvn;
 
 import com.gdvn.mixin.SetPassengersPacketAccessor;
+import com.mojang.math.Transformation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
@@ -11,6 +12,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityType;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.List;
 
