@@ -41,8 +41,6 @@ public class DisplayNameManager {
     public static void updateDisplayName(UUID uuid, PlayerData data) {
         MutableComponent component = Component.empty();
 
-
-
         if (data.clans != null && data.clan != null) {
             boolean isBoosted = data.clans.boostedUntil != null && !isExpired(data.clans.boostedUntil);
 
