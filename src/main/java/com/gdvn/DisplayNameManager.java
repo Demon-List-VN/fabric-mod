@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DisplayNameManager {
     private static final Map<UUID, Component> DISPLAY_NAMES = new ConcurrentHashMap<>();
+    private static final Map<UUID, String> ORIGINAL_TEAMS = new ConcurrentHashMap<>();
     private static final int DEFAULT_COLOR = 0xFFFFFF;
     private static final String TEAM_NAME = "gdvn_hidden";
 
@@ -31,6 +32,7 @@ public class DisplayNameManager {
 
     public static void removeDisplayName(UUID uuid) {
         DISPLAY_NAMES.remove(uuid);
+        ORIGINAL_TEAMS.remove(uuid);
     }
 
     public static void broadcastDisplayNameUpdate(ServerPlayer player, MinecraftServer server) {
@@ -72,6 +74,10 @@ public class DisplayNameManager {
 
     private static void hidePlayerNameTag(ServerPlayer player) {
         Scoreboard scoreboard = player.getServer().getScoreboard();
+        PlayerTeam currentTeam = scoreboard.getPlayersTeam(player.getScoreboardName());
+        if (currentTeam != null && !currentTeam.getName().equals(TEAM_NAME)) {
+            ORIGINAL_TEAMS.put(player.getUUID(), currentTeam.getName());
+        }
         PlayerTeam team = scoreboard.getPlayerTeam(TEAM_NAME);
         if (team == null) {
             team = scoreboard.addPlayerTeam(TEAM_NAME);
@@ -85,6 +91,13 @@ public class DisplayNameManager {
         PlayerTeam team = scoreboard.getPlayerTeam(TEAM_NAME);
         if (team != null) {
             scoreboard.removePlayerFromTeam(player.getScoreboardName(), team);
+        }
+        String originalTeamName = ORIGINAL_TEAMS.remove(player.getUUID());
+        if (originalTeamName != null) {
+            PlayerTeam originalTeam = scoreboard.getPlayerTeam(originalTeamName);
+            if (originalTeam != null) {
+                scoreboard.addPlayerToTeam(player.getScoreboardName(), originalTeam);
+            }
         }
     }
 
