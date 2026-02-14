@@ -20,7 +20,7 @@ public class NameTagEntity {
 
     public NameTagEntity(ServerPlayer owner, Component displayName) {
         this.owner = owner;
-        ServerLevel level = owner.serverLevel();
+        ServerLevel level = owner.level();
         this.textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, level);
         this.textDisplay.setPos(owner.getX(), owner.getY(), owner.getZ());
         this.textDisplay.setText(displayName);

@@ -14,7 +14,7 @@ public abstract class ServerPlayerMixin {
     @Inject(method = "getTabListDisplayName", at = @At("HEAD"), cancellable = true)
     private void gdvn$getTabListDisplayName(CallbackInfoReturnable<Component> cir) {
         ServerPlayer self = (ServerPlayer) (Object) this;
-        String originalName = self.getGameProfile().getName();
+        String originalName = self.getGameProfile().name();
         Component tabName = DisplayNameManager.getTabListDisplayName(self.getUUID(), originalName);
         if (tabName != null) {
             cir.setReturnValue(tabName);
