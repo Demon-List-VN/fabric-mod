@@ -57,7 +57,7 @@ public class Gdvn implements ModInitializer {
 					DisplayNameManager.updateDisplayName(player.getUUID(), data);
 
 					server.execute(() -> {
-						DisplayNameManager.applyCustomNameTag(player);
+						DisplayNameManager.applyCustomNameTag(player, server);
 						DisplayNameManager.broadcastDisplayNameUpdate(player, server);
 					});
 				} catch (Exception e) {
@@ -70,7 +70,7 @@ public class Gdvn implements ModInitializer {
 					server.execute(() -> {
 						player.sendSystemMessage(Component.literal(
 								"GDVN token expired. Please relink your account."));
-						DisplayNameManager.removeCustomNameTag(player);
+						DisplayNameManager.removeCustomNameTag(player, server);
 						DisplayNameManager.broadcastDisplayNameUpdate(player, server);
 					});
 				}

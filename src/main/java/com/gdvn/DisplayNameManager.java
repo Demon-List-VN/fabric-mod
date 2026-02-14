@@ -57,23 +57,23 @@ public class DisplayNameManager {
         return tabName;
     }
 
-    public static void applyCustomNameTag(ServerPlayer player) {
+    public static void applyCustomNameTag(ServerPlayer player, MinecraftServer server) {
         Component customName = DISPLAY_NAMES.get(player.getUUID());
         if (customName != null) {
             player.setCustomName(customName);
             player.setCustomNameVisible(true);
-            hidePlayerNameTag(player);
+            hidePlayerNameTag(player, server);
         }
     }
 
-    public static void removeCustomNameTag(ServerPlayer player) {
+    public static void removeCustomNameTag(ServerPlayer player, MinecraftServer server) {
         player.setCustomName(null);
         player.setCustomNameVisible(false);
-        restorePlayerNameTag(player);
+        restorePlayerNameTag(player, server);
     }
 
-    private static void hidePlayerNameTag(ServerPlayer player) {
-        Scoreboard scoreboard = player.getServer().getScoreboard();
+    private static void hidePlayerNameTag(ServerPlayer player, MinecraftServer server) {
+        Scoreboard scoreboard = server.getScoreboard();
         PlayerTeam currentTeam = scoreboard.getPlayersTeam(player.getScoreboardName());
         if (currentTeam != null && !currentTeam.getName().equals(TEAM_NAME)) {
             ORIGINAL_TEAMS.put(player.getUUID(), currentTeam.getName());
@@ -86,8 +86,8 @@ public class DisplayNameManager {
         scoreboard.addPlayerToTeam(player.getScoreboardName(), team);
     }
 
-    private static void restorePlayerNameTag(ServerPlayer player) {
-        Scoreboard scoreboard = player.getServer().getScoreboard();
+    private static void restorePlayerNameTag(ServerPlayer player, MinecraftServer server) {
+        Scoreboard scoreboard = server.getScoreboard();
         PlayerTeam team = scoreboard.getPlayerTeam(TEAM_NAME);
         if (team != null) {
             scoreboard.removePlayerFromTeam(player.getScoreboardName(), team);
