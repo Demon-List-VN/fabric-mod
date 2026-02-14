@@ -7,6 +7,7 @@ import com.gdvn.db.DatabaseManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,6 +49,9 @@ public class Gdvn implements ModInitializer {
 			ServerPlayer player = handler.player;
 			String uuid = player.getStringUUID();
 
+			// Show existing name tags to the joining player
+			DisplayNameManager.onPlayerJoin(player, server);
+
 			runAsync(() -> {
 				try {
 					String token = database.getToken(uuid);
@@ -57,7 +61,7 @@ public class Gdvn implements ModInitializer {
 					DisplayNameManager.updateDisplayName(player.getUUID(), data);
 
 					server.execute(() -> {
-						DisplayNameManager.applyCustomNameTag(player);
+						DisplayNameManager.applyCustomNameTag(player, server);
 						DisplayNameManager.broadcastDisplayNameUpdate(player, server);
 					});
 				} catch (Exception e) {
@@ -70,12 +74,19 @@ public class Gdvn implements ModInitializer {
 					server.execute(() -> {
 						player.sendSystemMessage(Component.literal(
 								"GDVN token expired. Please relink your account."));
-						DisplayNameManager.removeCustomNameTag(player);
+						DisplayNameManager.removeCustomNameTag(player, server);
 						DisplayNameManager.broadcastDisplayNameUpdate(player, server);
 					});
 				}
 			});
 		});
+
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			ServerPlayer player = handler.player;
+			DisplayNameManager.onPlayerDisconnect(player, server);
+		});
+
+		ServerTickEvents.END_SERVER_TICK.register(DisplayNameManager::tick);
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> EXECUTOR.shutdownNow());
 

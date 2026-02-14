@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DisplayNameManager {
     private static final Map<UUID, Component> DISPLAY_NAMES = new ConcurrentHashMap<>();
+    private static final Map<UUID, NameTagEntity> NAME_TAGS = new ConcurrentHashMap<>();
     private static final int DEFAULT_COLOR = 0xFFFFFF;
 
     public static Component getDisplayName(UUID uuid) {
@@ -51,17 +53,72 @@ public class DisplayNameManager {
         return tabName;
     }
 
-    public static void applyCustomNameTag(ServerPlayer player) {
+    public static void applyCustomNameTag(ServerPlayer player, MinecraftServer server) {
         Component customName = DISPLAY_NAMES.get(player.getUUID());
-        if (customName != null) {
-            player.setCustomName(customName);
-            player.setCustomNameVisible(true);
+        if (customName == null) return;
+
+        removeCustomNameTag(player, server);
+
+        NameTagEntity nameTag = new NameTagEntity(player, customName);
+        NAME_TAGS.put(player.getUUID(), nameTag);
+
+        for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
+            if (!viewer.getUUID().equals(player.getUUID())) {
+                nameTag.spawn(viewer);
+            }
         }
     }
 
-    public static void removeCustomNameTag(ServerPlayer player) {
-        player.setCustomName(null);
-        player.setCustomNameVisible(false);
+    public static void removeCustomNameTag(ServerPlayer player, MinecraftServer server) {
+        NameTagEntity nameTag = NAME_TAGS.remove(player.getUUID());
+        if (nameTag != null) {
+            for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
+                if (!viewer.getUUID().equals(player.getUUID())) {
+                    nameTag.despawn(viewer);
+                }
+            }
+        }
+    }
+
+    public static void onPlayerJoin(ServerPlayer player, MinecraftServer server) {
+        for (Map.Entry<UUID, NameTagEntity> entry : NAME_TAGS.entrySet()) {
+            if (!entry.getKey().equals(player.getUUID())) {
+                entry.getValue().spawn(player);
+            }
+        }
+    }
+
+    public static void onPlayerDisconnect(ServerPlayer player, MinecraftServer server) {
+        NameTagEntity nameTag = NAME_TAGS.remove(player.getUUID());
+        if (nameTag != null) {
+            for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
+                if (!viewer.getUUID().equals(player.getUUID())) {
+                    nameTag.despawn(viewer);
+                }
+            }
+        }
+    }
+
+    public static void tick(MinecraftServer server) {
+        Iterator<Map.Entry<UUID, NameTagEntity>> iterator = NAME_TAGS.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, NameTagEntity> entry = iterator.next();
+            NameTagEntity nameTag = entry.getValue();
+            ServerPlayer owner = nameTag.getOwner();
+
+            if (owner.isRemoved()) {
+                iterator.remove();
+                continue;
+            }
+
+            if (!nameTag.hasPositionChanged()) continue;
+
+            for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
+                if (!viewer.getUUID().equals(owner.getUUID())) {
+                    nameTag.updatePosition(viewer);
+                }
+            }
+        }
     }
 
     public static void updateDisplayName(UUID uuid, PlayerData data) {
