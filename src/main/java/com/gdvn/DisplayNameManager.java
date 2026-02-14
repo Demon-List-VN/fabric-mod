@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DisplayNameManager {
     private static final Map<UUID, Component> DISPLAY_NAMES = new ConcurrentHashMap<>();
-    private static final Map<UUID, NameTagEntity> NAME_TAGS = new ConcurrentHashMap<>();
     private static final int DEFAULT_COLOR = 0xFFFFFF;
 
     public static Component getDisplayName(UUID uuid) {
@@ -53,22 +52,11 @@ public class DisplayNameManager {
     }
 
     public static void onPlayerJoin(ServerPlayer player, MinecraftServer server) {
-        for (Map.Entry<UUID, NameTagEntity> entry : NAME_TAGS.entrySet()) {
-            if (!entry.getKey().equals(player.getUUID())) {
-                entry.getValue().spawn(player);
-            }
-        }
+
     }
 
     public static void onPlayerDisconnect(ServerPlayer player, MinecraftServer server) {
-        NameTagEntity nameTag = NAME_TAGS.remove(player.getUUID());
-        if (nameTag != null) {
-            for (ServerPlayer viewer : server.getPlayerList().getPlayers()) {
-                if (!viewer.getUUID().equals(player.getUUID())) {
-                    nameTag.despawn(viewer);
-                }
-            }
-        }
+
     }
 
     public static void updateDisplayName(UUID uuid, PlayerData data) {
